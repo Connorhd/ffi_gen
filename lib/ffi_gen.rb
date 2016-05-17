@@ -646,7 +646,12 @@ class FFIGen
         pointee_type = Clang.get_pointee_type canonical_type
         type = case pointee_type[:kind]
         when :char_s
-          StringType.new
+          if Clang.is_const_qualified_type(pointee_type) == 1
+            # Only count as string if const
+            StringType.new
+          else
+            PointerType.new(StringType.new.name, 1)
+          end
         when :record
           @declarations_by_type[Clang.get_cursor_type(Clang.get_type_declaration(pointee_type))]
         when :function_proto
